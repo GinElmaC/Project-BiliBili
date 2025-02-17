@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration scan="true" scanPeriod="10 minutes">
+<!--    配置日志输出-->
+    <!--表示日志输出器的名字是stdot，并输出在控制台上-->
+    <appender name="stdot" class="ch.qos.logback.core.ConsoleAppender">
+        <!--配置日志输出的日期格式用PatternLayout格式-->
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <!--具体的字符串格式-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss,GMT+8} [%p][%c][%M][%L]-> %m%n</pattern>
+        </layout>
+    </appender>
+
+    <!--配置日志文件的保存路径-->
+    <springProperty scope="context" name="log.path" source="project.folder"/>
+<!--    配置日志的等级-->
+    <springProperty scope="context" name="log.root.level" source="log.root.level"/>
+<!--    配置日志中显示的app名字-->
+    <springProperty scope="context" name="appname" source="spring.application.name"/>
+
+    <property name="LOG_FOLDER" value="logs"/>
+
+                           <!--RollingFileAppender表示这个日志文件是以文件形式滚动的保存-->
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/${LOG_FOLDER}/${appname}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--文件的命名格式-->
+            <FileNamePattern>${log.path}/${LOG_FOLDER}/${appname}.%d{yyyyMMdd}.%i</FileNamePattern>
+            <!--true表示在启动时会清理旧的日志文件-->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <!--配置日志文件基于时间和大小的规则-->
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!--单个日志文件最大为20mb-->
+                <MaxFileSize>20MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+            <!--保留的历史日志文件最多为30个-->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <!--日志文件的字符集-->
+        <encoder>
+            <charset>utf-8</charset>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss,GMT+8} [%p][%c][%M][%L]-> %m%n</pattern>
+        </encoder>
+        <!--为false表示每次写入都会先清空文件-->
+        <append>false</append>
+        <!--为false表示不会检查文件是否存在，每次写入会直接覆盖或新建-->
+        <prudent>false</prudent>
+    </appender>
+
+    <logger name="org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener"
+            level="error"></logger>
+    <logger name="org.redisson.connection.DNSMonitor" level="error"></logger>
+    <logger name="com.zaxxer.hikari" level="info"></logger>
+    <logger name="io.lettuce.core" level="info"></logger>
+    <logger name="org.springframework.data.redis" level="info"></logger>
+
+    <!--配置日志记录器以及其日志级别-->
+    <root level="${log.root.level}">
+        <!--引用stdot-->
+        <appender-ref ref="stdot"/>
+        <!--引用file-->
+        <appender-ref ref="file"/>
+    </root>
+
+</configuration>
