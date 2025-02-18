@@ -1,11 +1,10 @@
-package com.bilibili.web.controller;
+package com.bilibili.admin.Controller;
 import com.bilibili.Component.RedisComponent;
 import com.bilibili.constants.Constants;
 import com.bilibili.entity.dto.TokenUserInfoDto;
 import com.bilibili.entity.enums.ResponseCodeEnum;
 import com.bilibili.entity.vo.ResponseVO;
 import com.bilibili.exception.BusinessException;
-import com.bilibili.utils.StringTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -24,8 +23,6 @@ public class ABaseController {
 
     @Autowired
     private RedisComponent redisComponent;
-
-
 
     protected <T> ResponseVO getSuccessResponseVO(T t) {
         ResponseVO<T> responseVO = new ResponseVO<>();
@@ -99,9 +96,12 @@ public class ABaseController {
      */
     protected void saveTokenToCookie(HttpServletRequest request,HttpServletResponse response,String token){
         //将token存入cookie
-        Cookie cookie = new Cookie(Constants.TOKEN_WEB,token);
+        Cookie cookie = new Cookie(Constants.TOKEN_ADMIN,token);
         //设置cookie的过期时间
-        cookie.setMaxAge(Constants.TIME_SECOND_ONE_DAY);
+        /**
+         * 设置-1是为了让保存的adminToken变成“会话”模式，这样关闭浏览器就会消失
+         */
+        cookie.setMaxAge(-1);
         //设置cookie的根域，意思是这个cookie能被哪些路径访问到，这里“/”表示所有路径都可以访问到，即所有路径都能自动登录
         cookie.setPath("/");
         response.addCookie(cookie);
@@ -114,7 +114,7 @@ public class ABaseController {
      */
     protected TokenUserInfoDto getTokenUserDTOFromCookie(HttpServletRequest request){
         //获取cookie
-        String token = request.getHeader(Constants.TOKEN_WEB);
+        String token = request.getHeader(Constants.TOKEN_ADMIN);
         return redisComponent.getTokenUserInfo(token);
     }
 
@@ -128,8 +128,8 @@ public class ABaseController {
             return;
         }
         for(Cookie cookie:cookies){
-            if(cookie.getName().equals(Constants.TOKEN_WEB)){
-                redisComponent.cleanToken(cookie.getValue());
+            if(cookie.getName().equals(Constants.TOKEN_ADMIN)){
+                redisComponent.cleanAdminToken(cookie.getValue());
                 cookie.setMaxAge(0);
                 cookie.setPath("/");
                 response.addCookie(cookie);
